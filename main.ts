@@ -48,7 +48,8 @@ app.get('/', (request, response) => {
                 ip: string,
                 mac: string,
                 name: string,
-                comment: string
+                comment: string,
+                rowClass: string
             }[]> = {};
 
             for (const item of dataObject) {
@@ -57,10 +58,11 @@ app.get('/', (request, response) => {
                 }
 
                 serverResults[item['server']].push({
-                    ip: `${item['dynamic'] === 'true' ? '' : '📌 '} ${item['address']}`,
+                    ip: `${item['dynamic'] === 'true' ? '' : '📌'}${item['expires-after'] ? '' : '💀'} ${item['address']}`,
                     mac: item['mac-address'],
                     name: item['host-name'] ?? '-',
-                    comment: item['comment'] ?? '-'
+                    comment: item['comment'] ?? '-',
+                    rowClass: item['expires-after'] ? 'item-on' : 'item-off'
                 })
             }
 
@@ -104,6 +106,10 @@ app.get('/', (request, response) => {
                     div {
                         font-size: large;
                     }
+
+                    .item-off {
+                        color: darkred;
+                    }
                 </style>
                 <title>DHCP leases</title>
             </head>
@@ -129,7 +135,7 @@ app.get('/', (request, response) => {
                                 </th>
                             </tr>
                             ${
-                                serverResults[item].map(item => `<tr><td>${item.ip}</td><td>${
+                                serverResults[item].map(item => `<tr class="${item.rowClass}"><td>${item.ip}</td><td>${
                                     item.mac}</td><td>${item.name.replace(/</gi, '&lt;')}</td><td>${
                                         item.comment.replace(/</gi, '&lt;')}</td></tr>`).join('')
                             }
