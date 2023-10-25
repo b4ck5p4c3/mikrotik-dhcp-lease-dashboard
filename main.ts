@@ -108,7 +108,7 @@ app.get('/', (request, response) => {
                     }
 
                     .item-off {
-                        color: darkred;
+                        color: #888;
                     }
                 </style>
                 <title>DHCP leases</title>
