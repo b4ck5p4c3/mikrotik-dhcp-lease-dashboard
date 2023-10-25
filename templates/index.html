@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            font-family: monospace;
+        }
+
+        table {
+            width: 100%;
+        }
+        
+        table {
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            border-bottom: 1px solid gray;
+            padding: 5px;
+            text-align: left;
+        }
+        
+        tr:nth-child(even) > td {
+            background-color: #eee;
+        }
+
+        body {
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 10px 200px 10px;
+        }
+
+        div {
+            font-size: large;
+        }
+
+        .item-off {
+            color: #888;
+        }
+
+        .edit-button {
+            font-size: 10px;
+            padding: 0;
+            float: right;
+            cursor: pointer;
+        }
+
+        .remove-button {
+            font-size: 10px;
+            padding: 0;
+            float: right;
+            cursor: pointer;
+        }
+
+        .make-static-button {
+            font-size: 10px;
+            padding: 0;
+            float: right;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            for (const button of document.getElementsByClassName('make-static-button')) {
+                button.addEventListener('click', e => {
+                    const id = e.target.dataset.id;
+                    const info = e.target.dataset.info;
+
+                    if (!confirm(`Are you sure you want to make ${info} static lease?`)) {
+                        return;
+                    }
+
+                    fetch('/make-static', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            id
+                        }),
+                        headers: {
+                            'content-type': 'application/json'
+                        }
+                    }).then(data => {
+                        if (data.status === 500) {
+                            data.text().then(text => alert(`Error: ${text}`));
+                            return;
+                        }
+                        location.reload();
+                    }).alert(e => {
+                        alert(`Error: ${e}`);
+                    });
+                });
+            }
+            
+            for (const button of document.getElementsByClassName('remove-button')) {
+                button.addEventListener('click', e => {
+                    const id = e.target.dataset.id;
+                    const info = e.target.dataset.info;
+
+                    if (!confirm(`Are you sure you want to remove ${info}?`)) {
+                        return;
+                    }
+
+                    fetch('/remove', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            id
+                        }),
+                        headers: {
+                            'content-type': 'application/json'
+                        }
+                    }).then(data => {
+                        if (data.status === 500) {
+                            data.text().then(text => alert(`Error: ${text}`));
+                            return;
+                        }
+                        location.reload();
+                    }).alert(e => {
+                        alert(`Error: ${e}`);
+                    });
+                });
+            }
+
+            for (const button of document.getElementsByClassName('edit-button')) {
+                button.addEventListener('click', e => {
+                    const id = e.target.dataset.id;
+                    const info = e.target.dataset.info;
+                    const previousComment = e.target.dataset.comment;
+
+                    const newComment = prompt(`Enter new comment for ${info}:`, previousComment);
+
+                    if (!newComment) {
+                        return;
+                    }
+
+                    fetch('/comment', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            id,
+                            comment: newComment
+                        }),
+                        headers: {
+                            'content-type': 'application/json'
+                        }
+                    }).then(data => {
+                        if (data.status === 500) {
+                            data.text().then(text => alert(`Error: ${text}`));
+                            return;
+                        }
+                        location.reload();
+                    }).alert(e => {
+                        alert(`Error: ${e}`);
+                    });
+                });
+            }
+        });
+    </script>
+    <title>DHCP leases</title>
+</head>
+
+<body>
+    <h1>B4CKSP4CE DHCP leases</h1>
+    {% for name, clients in results %}
+        <div>Server: <b>{{ name }}</b></div>
+        <table>
+            <tr>
+                <th>
+                    IP
+                </th>
+                <th>
+                    MAC
+                </th>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Comment
+                </th>
+            </tr>
+            {% for client in clients %}
+            <tr class="{{ "" if client.isOnline else "item-off" }}">
+                <td>
+                    {{ "📌" if client.isPinned else "" }}
+                    {{ "" if client.isOnline else "💀" }}
+                    {{ client.ip }}
+                    <button class="remove-button" data-id="{{ client.id }}" 
+                        data-info="{{ client.ip }}">❌</button>
+                    {% if not client.isPinned %}
+                    <button class="make-static-button" data-id="{{ client.id }}" 
+                        data-info="{{ client.ip }}">📌</button>
+                    {% endif %}
+                </td>
+                <td>{{ client.mac }}</td>
+                <td>{{ client.name }}</td>
+                <td>
+                    {{ "-" if client.comment === "" else client.comment }}
+                    <button class="edit-button" 
+                        data-id="{{ client.id }}"
+                        data-info="{{ client.ip }}"
+                        data-comment="{{ client.comment }}">✏️</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
+</body>
+
+</html>

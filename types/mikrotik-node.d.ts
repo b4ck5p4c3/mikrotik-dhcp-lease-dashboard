@@ -6,7 +6,7 @@ declare module 'mikrotik-node' {
         value: string;
     }
 
-    export type MikrotikResponseData = MikrotikResponseDataItem[][];
+    export type MikrotikResponseData = MikrotikResponseDataItem[][] | MikrotikResponseDataItem[];
 
     export interface MikrotikResponse {
         cmd: {
@@ -19,9 +19,9 @@ declare module 'mikrotik-node' {
     }
 
     export class Channel {
-        write(command: string, args?: string[]): void;
+        write(command: string, args?: Record<string, string | boolean | number> | string[]): void;
         on(event: 'done', callback: (data: MikrotikResponse) => void): void;
-        on(event: 'trap', callback: (error: Error) => void): void;
+        on(event: 'trap', callback: (error: MikrotikResponse) => void): void;
         close(): void;
     }
 
